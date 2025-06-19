@@ -12,6 +12,7 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/mod/semver"
 
+	"nextver/debugger"
 	"nextver/versioning"
 )
 
@@ -61,38 +62,53 @@ func (r *Repo) RecentTaggedVersion() (string, error) {
 	return "", errors.New("no recent tagged version")
 }
 
-func (r *Repo) EstimatedNextVersion(currentVer string) (string, error) {
+func (r *Repo) EstimatedNextVersion(currentVer string, debug *debugger.Debugger) (string, error) {
 	if currentVer == "" {
+		debug.Log("Current version is missing. Start a new one at v1.0.0.")
 		return "v1.0.0", nil
 	}
 	tagRef, err := r.repo.Tag(currentVer)
 	if err != nil {
+		debug.Logf("Unable to retrieve tags. %v", err)
 		return "", err
+	} else {
+		debug.Logf("Tag ref=%s", tagRef)
 	}
-	commits, err := r.repo.Log(&git.LogOptions{From: tagRef.Hash()})
+	commits, err := r.repo.Log(&git.LogOptions{From: tagRef.Hash(), Order: git.LogOrderCommitterTime})
 	if err != nil {
+		debug.Logf("Unable to retrieve logs. %v", err)
 		return "", err
+	} else {
+		debug.Logf("Commits=%s", commits)
 	}
 
 	majorCount := 0
 	minorCount := 0
 	revisionCount := 0
+
+	debug.Log("Counting changes")
 	commits.ForEach(func(commit *object.Commit) error {
-		result, err := convcommit.Parse(commit.Message)
-		if err == nil {
-			if result.IsBreakingChange {
-				majorCount += 1
-			} else {
-				switch result.Type {
-				case "feat":
-					minorCount += 1
-				case "fix":
-					revisionCount += 1
+		if commit.Hash != tagRef.Hash() {
+			result, err := convcommit.Parse(commit.Message)
+			debug.Log(result)
+			if err == nil {
+				if result.IsBreakingChange {
+					majorCount += 1
+				} else {
+					switch result.Type {
+					case "feat":
+						minorCount += 1
+					case "fix":
+						revisionCount += 1
+					}
 				}
 			}
 		}
 		return nil
 	})
+	debug.Logf("Major changes = %d", majorCount)
+	debug.Logf("Minor changes = %d", minorCount)
+	debug.Logf("Revision changes = %d", revisionCount)
 
 	currentSemVer, _ := versioning.Parse(currentVer)
 	if majorCount > 0 {
