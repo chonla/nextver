@@ -88,6 +88,7 @@ func (r *Repo) EstimatedNextVersion(currentVer string, debug *debugger.Debugger)
 
 	debug.Log("Counting changes")
 	commits.ForEach(func(commit *object.Commit) error {
+		debug.Log(commit.Message)
 		if commit.Hash != tagRef.Hash() {
 			result, err := convcommit.Parse(commit.Message)
 			debug.Log(result)
