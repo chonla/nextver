@@ -9,56 +9,74 @@ import (
 )
 
 type Version struct {
-	Major int64
-	Minor int64
-	Patch int64
+	Prefix string
+	Major  int64
+	Minor  int64
+	Patch  int64
 }
 
-func IsValid(version string) bool {
-	return semver.IsValid(version)
+func IsValid(version string, versionIsNotPrefixedByV bool) bool {
+	prefixedVersion := version
+	if versionIsNotPrefixedByV {
+		prefixedVersion = fmt.Sprintf("v%s", version)
+	}
+	return semver.IsValid(prefixedVersion)
 }
 
-func Parse(version string) (*Version, error) {
-	if IsValid(version) {
-		majorSegment := semver.Major(version)
-		majorMinorSegment := semver.MajorMinor(version)
+func Parse(version string, versionIsNotPrefixedByV bool) (*Version, error) {
+	prefix := "v"
+	if versionIsNotPrefixedByV {
+		prefix = ""
+	}
+
+	if IsValid(version, versionIsNotPrefixedByV) {
+		prefixedVersion := version
+		if versionIsNotPrefixedByV {
+			prefixedVersion = fmt.Sprintf("v%s", version)
+		}
+		majorSegment := semver.Major(prefixedVersion)
+		majorMinorSegment := semver.MajorMinor(prefixedVersion)
 		major, _ := strconv.ParseInt(majorSegment[1:], 10, 64)
 		minor, _ := strconv.ParseInt(majorMinorSegment[len(majorSegment)+1:], 10, 64)
-		patch, _ := strconv.ParseInt(version[len(majorMinorSegment)+1:], 10, 64)
+		patch, _ := strconv.ParseInt(prefixedVersion[len(majorMinorSegment)+1:], 10, 64)
 
 		return &Version{
-			Major: major,
-			Minor: minor,
-			Patch: patch,
+			Prefix: prefix,
+			Major:  major,
+			Minor:  minor,
+			Patch:  patch,
 		}, nil
 	}
 	return nil, errors.New("invalid version")
 }
 
 func (v *Version) String() string {
-	return fmt.Sprintf("v%d.%d.%d", v.Major, v.Minor, v.Patch)
+	return fmt.Sprintf("%s%d.%d.%d", v.Prefix, v.Major, v.Minor, v.Patch)
 }
 
 func (v *Version) NextMajor() *Version {
 	return &Version{
-		Major: v.Major + 1,
-		Minor: 0,
-		Patch: 0,
+		Prefix: v.Prefix,
+		Major:  v.Major + 1,
+		Minor:  0,
+		Patch:  0,
 	}
 }
 
 func (v *Version) NextMinor() *Version {
 	return &Version{
-		Major: v.Major,
-		Minor: v.Minor + 1,
-		Patch: 0,
+		Prefix: v.Prefix,
+		Major:  v.Major,
+		Minor:  v.Minor + 1,
+		Patch:  0,
 	}
 }
 
 func (v *Version) NextPatch() *Version {
 	return &Version{
-		Major: v.Major,
-		Minor: v.Minor,
-		Patch: v.Patch + 1,
+		Prefix: v.Prefix,
+		Major:  v.Major,
+		Minor:  v.Minor,
+		Patch:  v.Patch + 1,
 	}
 }
