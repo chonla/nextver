@@ -105,7 +105,7 @@ main() {
 
 
   # 4. Construct download URL and download the release
-  FILENAME="${APP_NAME}_${LATEST_VERSION}_${OS}_${ARCH}.tar.gz"
+  FILENAME="${APP_NAME}-${LATEST_VERSION}-${OS}-${ARCH}.tar.gz"
   DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/download/${LATEST_VERSION}/${FILENAME}"
 
   info "4. Downloading from: $DOWNLOAD_URL"
@@ -145,6 +145,7 @@ main() {
   
   # Extract the binary and install it
   cd "$TMP_DIR"
+
   tar -xzf "$FILENAME"
   
   # Find the binary in the extracted files
