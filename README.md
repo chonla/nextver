@@ -6,6 +6,12 @@ This CLI requires the commit messages to be written in [conventional commit](htt
 
 ## Installation
 
+### Curl
+
+```
+sh <(curl -sL https://raw.githubusercontent.com/chonla/nextver/refs/heads/main/install.sh)
+```
+
 ### Homebrew/Linuxbrew
 
 ```
