@@ -126,7 +126,7 @@ func (r *Repo) EstimatedNextVersion(currentVer string, versionIsNotPrefixedByV b
 				switch result.Type {
 				case "feat":
 					minorCount += 1
-				case "fix":
+				case "fix", "chore", "doc", "docs", "style":
 					revisionCount += 1
 				}
 			}
